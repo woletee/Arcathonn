@@ -48,6 +48,7 @@ training_tasks = sorted(os.listdir(training_path))
 test_tasks = sorted(os.listdir(test_path))
 evaluation_tasks = sorted(os.listdir(evaluation_path))
 
+#the plot_result function plots the specific task input(inp), its test expected output(eoup), and model's prediction(oup) . it uses matplotlib for plotting.
 def plot_result(inp,eoup,oup):
     """
     Plots the first train and test pairs of a specified task,
@@ -74,7 +75,7 @@ def plot_result(inp,eoup,oup):
     plt.grid()
     plt.tight_layout()
     plt.show()
-
+#the plot_maths function is a general purpose matric for visualizing a lsit of matrices 
 def plot_mats(mats):
     cmap = colors.ListedColormap(
         ['#000000', '#0074D9','#FF4136','#2ECC40','#FFDC00',
@@ -91,10 +92,11 @@ def plot_mats(mats):
     plt.grid(True)
     plt.tight_layout()
     plt.show()
+#the getioric function takes in a specific task as input and then extracts its input and output matrics and then return them along with the dimension of the task(column and row)
 def getiorc(pair):
     inp = pair["input"]
     return pair["input"],pair["output"],len(inp),len(inp[0])
-
+#the getAround function is used to return the values of neighbouring elements around a given position i and j
 def getAround(i,j,inp,size=1):
     #v = [-1,-1,-1,-1,-1,-1,-1,-1,-1]
     r,c = len(inp),len(inp[0])
@@ -110,10 +112,10 @@ def getAround(i,j,inp,size=1):
         if((0<= ii < r) and (0<= jj < c)):
             v[idx] = (inp[ii][jj])
     return v
-
+#this getDiagonal function is actually like a place holder that can be used for later operations
 def getDiagonal(i,j,r,c):
     return
-
+#the getx function extracts important features for a given position i and j in a 2D matrix
 def getX(inp,i,j,size):
     z = []
     n_inp = np.array(inp)
@@ -137,6 +139,7 @@ def getX(inp,i,j,size):
     z.append(len(np.unique(arnd)))
     z.extend(arnd)
     return z
+#the getxy function extracts input features and the output fetaures 
 def getXy(inp,oup,size):
     x = []
     y = []
@@ -146,7 +149,7 @@ def getXy(inp,oup,size):
             x.append(getX(inp,i,j,size))
             y.append(oup[i][j])
     return x,y
-
+#the getBkgColor will return the background color of the specific task 
 def getBkgColor(task_json):
     color_dict = defaultdict(int)
 
@@ -198,20 +201,20 @@ def augment(inp,oup,bl_cols):
             if(count % mod == 0):
                 result.append((replace(inp,uni,perm),replace(oup,uni,perm)))
     return result
-
+#the get_flips function retruns a list of tuples where each tuple contains matrics that came as a result of flip rotations 
 def get_flips(inp,oup):
-    result = []
+    result = [] #store generated matrics
     n_inp = np.array(inp)
     n_oup = np.array(oup)
-    result.append((np.fliplr(inp).tolist(),np.fliplr(oup).tolist()))
-    result.append((np.rot90(np.fliplr(inp),1).tolist(),np.rot90(np.fliplr(oup),1).tolist()))
-    result.append((np.rot90(np.fliplr(inp),2).tolist(),np.rot90(np.fliplr(oup),2).tolist()))
-    result.append((np.rot90(np.fliplr(inp),3).tolist(),np.rot90(np.fliplr(oup),3).tolist()))
-    result.append((np.flipud(inp).tolist(),np.flipud(oup).tolist()))
-    result.append((np.rot90(np.flipud(inp),1).tolist(),np.rot90(np.flipud(oup),1).tolist()))
-    result.append((np.rot90(np.flipud(inp),2).tolist(),np.rot90(np.flipud(oup),2).tolist()))
-    result.append((np.rot90(np.flipud(inp),3).tolist(),np.rot90(np.flipud(oup),3).tolist()))
-    result.append((np.fliplr(np.flipud(inp)).tolist(),np.fliplr(np.flipud(oup)).tolist()))
+    result.append((np.fliplr(inp).tolist(),np.fliplr(oup).tolist())) #flipping both the input and the output horizontally 
+    result.append((np.rot90(np.fliplr(inp),1).tolist(),np.rot90(np.fliplr(oup),1).tolist()))#flipping horizontally and then rotating 90 degrees 
+    result.append((np.rot90(np.fliplr(inp),2).tolist(),np.rot90(np.fliplr(oup),2).tolist()))#flipping horizontally and then rotating 180 degrees 
+    result.append((np.rot90(np.fliplr(inp),3).tolist(),np.rot90(np.fliplr(oup),3).tolist()))#flipping horizontally and then rotating 270 degrees 
+    result.append((np.flipud(inp).tolist(),np.flipud(oup).tolist()))#flipping vertically both the input and the output 
+    result.append((np.rot90(np.flipud(inp),1).tolist(),np.rot90(np.flipud(oup),1).tolist()))#flipping verticallly and then rotating 90 degrees 
+    result.append((np.rot90(np.flipud(inp),2).tolist(),np.rot90(np.flipud(oup),2).tolist()))#flipping vertically and then rotating 180 degrees 
+    result.append((np.rot90(np.flipud(inp),3).tolist(),np.rot90(np.flipud(oup),3).tolist()))#flipping vertically and then rotating 270 degrees 
+    result.append((np.fliplr(np.flipud(inp)).tolist(),np.fliplr(np.flipud(oup)).tolist()))#flipping both horizontally and then vertically 
     return result
 
 def gettaskxy(task_json,aug,around_size,bl_cols,flip=True):
