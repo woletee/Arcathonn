@@ -179,28 +179,8 @@ def replace(inp,uni,perm):
     return rp
 
 
-def augment(inp,oup,bl_cols):
-    cols = "0123456789"
-    npr_map = [1,9,72,3024,15120,60480,181440,362880,362880]
-    uni = "".join([str(x) for x in np.unique(inp).tolist()])
-    for c in bl_cols:
-        cols=cols.replace(str(c),"")
-        uni=uni.replace(str(c),"")
 
-    exp_size = len(inp)*len(inp[0])*npr_map[len(uni)]
 
-    mod = floor(exp_size/120000)
-    mod = 1 if mod==0 else mod
-
-    #print(exp_size,mod,len(uni))
-    result = []
-    count = 0
-    for comb in combinations(cols,len(uni)):
-        for perm in permutations(comb):
-            count+=1
-            if(count % mod == 0):
-                result.append((replace(inp,uni,perm),replace(oup,uni,perm)))
-    return result
 #the get_flips function retruns a list of tuples where each tuple contains matrics that came as a result of flip rotations 
 def get_flips(inp,oup):
     result = [] #store generated matrics
