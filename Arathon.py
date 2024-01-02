@@ -116,67 +116,7 @@ def getAround(i,j,inp,size=1):
 def getDiagonal(i,j,r,c):
     return
 #the getx function extracts important features for a given position i and j in a 2D matrix
-def getX(inp,i,j,size):
-    z = []
-    n_inp = np.array(inp)
-    z.append(i)
-    z.append(j)
-    r,c = len(inp),len(inp[0])
-    for m in range(5):
-        z.append(i%(m+1))
-        z.append(j%(m+1))
-    z.append(i+j)
-    z.append(i*j)
-#     z.append(i%j)
-#     z.append(j%i)
-    z.append((i+1)/(j+1))
-    z.append((j+1)/(i+1))
-    z.append(r)
-    z.append(c)
-    z.append(len(np.unique(n_inp[i,:])))
-    z.append(len(np.unique(n_inp[:,j])))
-    arnd = getAround(i,j,inp,size)
-    z.append(len(np.unique(arnd)))
-    z.extend(arnd)
-    return z
-#the getxy function extracts input features and the output fetaures 
-def getXy(inp,oup,size):
-    x = []
-    y = []
-    r,c = len(inp),len(inp[0])
-    for i in range(r):
-        for j in range(c):
-            x.append(getX(inp,i,j,size))
-            y.append(oup[i][j])
-    return x,y
-#the getBkgColor will return the background color of the specific task 
-def getBkgColor(task_json):
-    color_dict = defaultdict(int)
 
-    for pair in task_json['train']:
-        inp,oup,r,c = getiorc(pair)
-        for i in range(r):
-            for j in range(c):
-                color_dict[inp[i][j]]+=1
-    color = -1
-    max_count = 0
-    for col,cnt in color_dict.items():
-        if(cnt > max_count):
-            color = col
-            max_count = cnt
-    return color
-def replace(inp,uni,perm):
-    # uni = '234' perm = ['5','7','9']
-    #print(uni,perm)
-    r_map = { int(c):int(s) for c,s in zip(uni,perm)}
-    r,c = len(inp),len(inp[0])
-    rp = np.array(inp).tolist()
-    #print(rp)
-    for i in range(r):
-        for j in range(c):
-            if(rp[i][j] in r_map):
-                rp[i][j] = r_map[rp[i][j]]
-    return rp
 
 
 
@@ -191,10 +131,6 @@ def get_flips(inp,oup):
     result.append((np.rot90(np.fliplr(inp),2).tolist(),np.rot90(np.fliplr(oup),2).tolist()))#flipping horizontally and then rotating 180 degrees 
     result.append((np.rot90(np.fliplr(inp),3).tolist(),np.rot90(np.fliplr(oup),3).tolist()))#flipping horizontally and then rotating 270 degrees 
     result.append((np.flipud(inp).tolist(),np.flipud(oup).tolist()))#flipping vertically both the input and the output 
-    result.append((np.rot90(np.flipud(inp),1).tolist(),np.rot90(np.flipud(oup),1).tolist()))#flipping verticallly and then rotating 90 degrees 
-    result.append((np.rot90(np.flipud(inp),2).tolist(),np.rot90(np.flipud(oup),2).tolist()))#flipping vertically and then rotating 180 degrees 
-    result.append((np.rot90(np.flipud(inp),3).tolist(),np.rot90(np.flipud(oup),3).tolist()))#flipping vertically and then rotating 270 degrees 
-    result.append((np.fliplr(np.flipud(inp)).tolist(),np.fliplr(np.flipud(oup)).tolist()))#flipping both horizontally and then vertically 
     return result
 
 def gettaskxy(task_json,aug,around_size,bl_cols,flip=True):
@@ -231,16 +167,6 @@ def test_predict(task_json,model,size):
     oup = predict(inp,model,size)
     return inp,eoup,oup
 
-def predict(inp,model,size):
-    r,c = len(inp),len(inp[0])
-    oup = np.zeros([r,c],dtype=int)
-    for i in range(r):
-        for j in range(c):
-            x = getX(inp,i,j,size)
-            o = int(model.predict([x]))
-            o = 0 if o<0 else o
-            oup[i][j]=o
-    return oup
 
 def submit_predict(task_json,model,size):
     pred_map = {}
@@ -252,33 +178,7 @@ def submit_predict(task_json,model,size):
         idx+=1
         plot_result(inp,oup,oup)
     return pred_map
-
-def dumb_predict(task_json):
-    pred_map = {}
-    idx=0
-    for pair in task_json['test']:
-        inp = pair["input"]
-        pred_map[idx] = [[0,0],[0,0]]
-        idx+=1
-    return pred_map
-
-def get_loss(model,task_json,size):
-    total = 0
-    for pair in task_json['train']:
-        inp,oup=pair["input"],pair["output"]
-        eoup = predict(inp,model,size)
-        total+= np.sum((np.array(oup) != np.array(eoup)))
-    return total
-
-def get_test_loss(model,task_json,size):
-    total = 0
-    for pair in task_json['test']:
-        inp,oup=pair["input"],pair["output"]
-        eoup = predict(inp,model,size)
-        total+= np.sum((np.array(oup) != np.array(eoup)))
-    return total
-
-def get_a_size(task_json):
+e(task_json):
     return 4;
 
 def get_bl_cols(task_json):
@@ -349,14 +249,6 @@ for task_path in test_path.glob("*.json"):
     if(inp_oup_dim_same(task_json)):
         a_size = get_a_size(task_json)
         bl_cols = get_bl_cols(task_json)
-
-        isflip = False
-        X1,Y1 = gettaskxy(task_json,True,1,bl_cols,isflip)
-        X3,Y3 = gettaskxy(task_json,True,3,bl_cols,isflip)
-        X5,Y5 = gettaskxy(task_json,True,5,bl_cols,isflip)
-        model_1 = BaggingClassifier(base_estimator=DecisionTreeClassifier(),n_estimators=100).fit(X1, Y1)
-        model_3 = BaggingClassifier(base_estimator=DecisionTreeClassifier(),n_estimators=100).fit(X3, Y3)
-        model_5 = BaggingClassifier(base_estimator=DecisionTreeClassifier(),n_estimators=100).fit(X5, Y5)
 
         pred_map_1 = submit_predict(task_json,model_1,1)
         pred_map_3 = submit_predict(task_json,model_3,3)
